@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>勝過罪惡 ‧ 持守救恩 | 多人線上即時互動氣球破冰遊戲</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #f8fafc;
+            overflow-x: hidden;
+            touch-action: none;
+        }
+
+        /* Balloon Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(-2deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 9999px;
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between overflow-hidden select-none">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-700/50 px-3 sm:px-4 py-2.5 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center text-white shadow-lg">
+                <i class="fa-solid font-black text-base sm:text-lg fa-cross"></i>
+            </div>
+            <div>
+                <h1 class="text-sm sm:text-lg font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-red-400">
+                    勝過罪惡 ‧ 持守救恩
+                </h1>
+                <p class="text-[10px] sm:text-xs text-slate-400 font-medium hidden sm:block">團契／主日學 多人線上即時互動 APP</p>
+            </div>
+        </div>
+
+        <!-- Room Status & Tools -->
+        <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <!-- Room Badge -->
+            <button id="roomBadgeBtn" onclick="openRoomShareModal()" class="hidden px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-users text-amber-400"></i>
+                <span id="roomBadgeText">房號: ----</span>
+                <span id="onlineCountBadge" class="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[10px] font-black">1</span>
+            </button>
+
+            <button id="guideBtn" onclick="toggleGuideModal()" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition flex items-center gap-1 shadow">
+                <i class="fa-solid fa-book-open"></i> <span class="hidden sm:inline">教員指引</span>
+            </button>
+            <button id="soundToggleBtn" onclick="toggleSound()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center border border-slate-700">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="mainContainer" class="relative flex-1 w-full max-w-4xl mx-auto flex flex-col items-center justify-center p-2 sm:p-5 overflow-hidden">
+
+        <!-- ================= PAGE 0: ROOM SELECTION / JOIN ================= -->
+        <section id="roomJoinPage" class="w-full h-full flex flex-col justify-between bg-slate-900/90 rounded-2xl border border-slate-700/60 p-4 sm:p-6 shadow-2xl backdrop-blur overflow-y-auto text-center">
+            
+            <div class="space-y-3 my-auto max-w-md mx-auto w-full">
+                <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-xl shadow-amber-500/20 animate-float">
+                    <i class="fa-solid fa-balloon-glow text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-white">加入多人連線房間</h2>
+                    <p class="text-xs text-slate-400 mt-1">請輸入教員公佈的 4 位數房間號碼，或建立新房間</p>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <div class="flex gap-2">
+                        <input type="text" id="joinRoomInput" placeholder="輸入 4 位數房號 (如 8888)" maxlength="10"
+                               class="flex-1 bg-slate-950 border border-amber-500/40 rounded-xl px-4 py-3 text-center text-lg font-black text-amber-300 tracking-widest focus:outline-none focus:border-amber-400 uppercase placeholder:text-slate-600 placeholder:text-xs">
+                        <button onclick="joinExistingRoom()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black px-5 py-3 rounded-xl text-sm transition shadow-lg shrink-0">
+                            加入房間
+                        </button>
+                    </div>
+
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-slate-800"></div>
+                        <span class="flex-shrink mx-3 text-slate-500 text-xs font-bold">或</span>
+                        <div class="flex-grow border-t border-slate-800"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="createNewRoomHost()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold py-2.5 px-3 rounded-xl text-xs border border-amber-500/30 transition flex items-center justify-center gap-1.5 shadow">
+                            <i class="fa-solid fa-plus-circle"></i> 建立新房間 (主持)
+                        </button>
+                        <button onclick="startSinglePlayerMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-3 rounded-xl text-xs border border-slate-700 transition flex items-center justify-center gap-1.5 shadow">
+                            <i class="fa-solid fa-desktop"></i> 單機/投影模式
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GitHub Pages Deploy Notice -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-left text-[11px] text-slate-400 flex items-start gap-2.5 mt-4">
+                <i class="fa-solid fa-circle-info text-amber-400 text-sm shrink-0 mt-0.5"></i>
+                <div>
+                    <strong class="text-slate-200">GitHub Pages 發布說明：</strong>
+                    本應用程式可直接託管於 GitHub Pages！輸入相同房號即可跨手機、跨平板、跨電腦即時連線互動。
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= PAGE 1: PREPARATION & CREATION ================= -->
+        <section id="setupPage" class="hidden w-full h-full flex flex-col justify-between bg-slate-900/90 rounded-2xl border border-slate-700/60 p-3 sm:p-5 shadow-2xl backdrop-blur overflow-y-auto">
+            
+            <div class="text-center space-y-1">
+                <div class="flex justify-center items-center gap-2">
+                    <span class="px-2.5 py-0.5 text-[11px] font-bold bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30">
+                        步驟 1：輸入與吹氣 (Preparation & Inflation)
+                    </span>
+                </div>
+                <h2 class="text-lg sm:text-xl font-black text-white">準備「罪惡氣球」與「得救氣球」</h2>
+                <p class="text-[11px] sm:text-xs text-slate-300">
+                    請學員在手機寫下內容並新增，所有人輸入的氣球將實時同步發放！
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-3">
+                
+                <!-- Sin Balloons Card -->
+                <div class="bg-red-950/40 border border-red-500/30 rounded-xl p-3 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-red-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                            第1組：寫下「罪惡的事情」
+                        </h3>
+                        <span id="sinCountBadge" class="text-[10px] bg-red-900/60 text-red-300 px-2 py-0.5 rounded-full border border-red-700">0 顆</span>
+                    </div>
+                    
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="sinInput" placeholder="輸入罪惡項目(如:謊言,驕傲)..." 
+                               class="flex-1 bg-slate-900 border border-red-500/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-red-400">
+                        <button onclick="addSinBalloon()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shadow shrink-0">
+                            <i class="fa-solid fa-plus"></i> 新增
+                        </button>
+                    </div>
+
+                    <div id="sinList" class="flex-1 min-h-[90px] max-h-32 overflow-y-auto flex flex-wrap gap-1.5 p-1.5 bg-slate-950/60 rounded-lg border border-slate-800">
+                        <!-- Dynamic Balloon Chips -->
+                    </div>
+                </div>
+
+                <!-- Salvation Balloons Card -->
+                <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-dove text-amber-400"></i>
+                            第2組：寫下「得救的要點」
+                        </h3>
+                        <span id="salvationCountBadge" class="text-[10px] bg-amber-900/60 text-amber-300 px-2 py-0.5 rounded-full border border-amber-700">0 顆</span>
+                    </div>
+                    
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="salvationInput" placeholder="輸入得救要點(如:悔改,寶血)..." 
+                               class="flex-1 bg-slate-900 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400">
+                        <button onclick="addSalvationBalloon()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shadow shrink-0">
+                            <i class="fa-solid fa-plus"></i> 新增
+                        </button>
+                    </div>
+
+                    <div id="salvationList" class="flex-1 min-h-[90px] max-h-32 overflow-y-auto flex flex-wrap gap-1.5 p-1.5 bg-slate-950/60 rounded-lg border border-slate-800">
+                        <!-- Dynamic Balloon Chips -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Settings & Start Bar -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex flex-col sm:flex-row justify-between items-center gap-2.5">
+                <div class="flex items-center gap-3 text-xs text-slate-300 w-full sm:w-auto justify-between sm:justify-start">
+                    <label class="flex items-center gap-1.5">
+                        <span class="text-[11px]"><i class="fa-solid fa-stopwatch text-amber-400"></i> 限時：</span>
+                        <select id="timerSelect" onchange="updateRoomTimerSetting()" class="bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-amber-300 text-xs font-bold focus:outline-none">
+                            <option value="20">20 秒（快速）</option>
+                            <option value="30" selected>30 秒（標準）</option>
+                            <option value="45">45 秒（挑戰）</option>
+                            <option value="60">60 秒（輕鬆）</option>
+                        </select>
+                    </label>
+                    
+                    <button onclick="loadDefaultPresets()" class="text-[11px] text-slate-400 hover:text-amber-300 underline flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> 載入預設範例
+                    </button>
+                </div>
+
+                <button id="startStage1Btn" onclick="inflateAndStartGame()" class="w-full sm:w-auto bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-400 hover:to-red-400 text-slate-950 font-black px-5 py-2 rounded-xl text-xs sm:text-sm transition transform active:scale-95 shadow-xl flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wind text-sm"></i>
+                    吹飽氣球並開始第一關 (踩罪惡)
+                </button>
+            </div>
+
+        </section>
+
+        <!-- ================= PAGE 2 & 3: GAME CANVAS STAGE ================= -->
+        <section id="gameStage" class="hidden absolute inset-0 w-full h-full flex flex-col justify-between overflow-hidden">
+            
+            <!-- Game HUD Overlay -->
+            <div class="absolute top-2 left-2 right-2 z-20 flex justify-between items-center pointer-events-none">
+                
+                <!-- Stage Badge -->
+                <div id="stageBadge" class="bg-slate-900/90 border border-amber-500/40 px-2.5 py-1 rounded-xl shadow-lg flex items-center gap-2">
+                    <span id="stageIcon" class="w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                    <div>
+                        <div id="stageTitle" class="text-xs font-black text-amber-300">第一關：踩碎罪惡氣球</div>
+                        <div id="stageSub" class="text-[9px] text-slate-400">點擊把地上所有罪惡氣球踩破！</div>
+                    </div>
+                </div>
+
+                <!-- Timer & Counter Widget -->
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-slate-900/90 border border-slate-700 px-2.5 py-1 rounded-xl shadow-lg text-center min-w-[60px]">
+                        <div class="text-[9px] text-slate-400 uppercase font-bold">時間</div>
+                        <div id="gameTimer" class="text-base font-black text-amber-400 leading-none">30s</div>
+                    </div>
+
+                    <div class="bg-slate-900/90 border border-slate-700 px-2.5 py-1 rounded-xl shadow-lg text-center min-w-[70px]">
+                        <div id="counterLabel" class="text-[9px] text-slate-400 uppercase font-bold">剩餘罪惡</div>
+                        <div id="gameCounter" class="text-base font-black text-red-400 leading-none">0/0</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Canvas Element for Physics & Particles -->
+            <canvas id="gameCanvas" class="w-full h-full bg-slate-950/80 cursor-pointer block"></canvas>
+
+            <!-- Bottom Toast / Floating Prompt -->
+            <div id="stageTip" class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-full text-[11px] text-slate-200 text-center font-medium shadow-2xl backdrop-blur pointer-events-none flex items-center gap-2">
+                <i class="fa-solid fa-hand-pointer text-amber-400 animate-bounce"></i>
+                <span id="tipText">連擊/點擊氣球將其踩破！</span>
+            </div>
+
+        </section>
+
+        <!-- ================= PAGE 4: RESULT & DEBRIEF ================= -->
+        <section id="resultPage" class="hidden w-full h-full flex flex-col justify-between bg-slate-900/95 rounded-2xl border border-amber-500/40 p-4 sm:p-5 shadow-2xl backdrop-blur overflow-y-auto text-center space-y-3">
+            
+            <div class="space-y-1.5">
+                <div class="w-14 h-14 bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 rounded-full flex items-center justify-center mx-auto text-xl shadow-xl border-4 border-amber-200 animate-bounce">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-200">
+                    大獲全勝！罪惡除淨 ‧ 持守救恩
+                </h2>
+                <p class="text-xs text-slate-300 max-w-lg mx-auto">
+                    感謝神！大家齊心合作踩破了所有「罪惡氣球」，並同心協力讓寫著「得救要點」的氣球全數高飛、未曾落地！
+                </p>
+            </div>
+
+            <!-- Scripture Reflection Box -->
+            <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-3 text-left space-y-1 relative overflow-hidden">
+                <div class="absolute -right-3 -bottom-3 text-amber-500/10 text-7xl font-serif">“</div>
+                <div class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                    <i class="fa-solid fa-book-bible"></i> 屬靈經文印證 (Scripture)
+                </div>
+                <p class="text-xs sm:text-sm font-semibold text-amber-100 leading-relaxed italic">
+                    「若有人在基督裡，他就是新造的人，舊事已過，都變成新的了。」
+                </p>
+                <p class="text-[11px] text-amber-300 text-right font-medium">— 哥林多後書 5:17</p>
+            </div>
+
+            <!-- Group Discussion Questions -->
+            <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-left space-y-2">
+                <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-comments"></i> 教員導引／小組分享題目 (Debriefing Questions)
+                </h3>
+                <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                    <li><strong class="text-slate-100">踩碎罪惡：</strong> 當大家合作踩碎氣球時，有何感受？在生活中我們該如何彼此扶持、遠離罪惡？</li>
+                    <li><strong class="text-slate-100">托舉救恩：</strong> 把「得救要點」向上拍打時，一個人容易漏掉嗎？這如何象徵我們在教會團契中共同持守信仰？</li>
+                    <li><strong class="text-slate-100">實踐信仰：</strong> 在剛才寫下的得救要點中，哪一項最觸動你的心？</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                <button onclick="resetApp()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-3 rounded-xl text-xs border border-slate-700 transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i> 重新開始遊戲
+                </button>
+                <button onclick="toggleGuideModal()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-graduation-cap"></i> 查看完整教案指引
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal: Room Share & QR Code Info -->
+    <div id="roomShareModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/40 w-full max-w-sm rounded-2xl p-5 text-center space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-black text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> 邀請學員加入房間
+                </h3>
+                <button onclick="closeRoomShareModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <p class="text-xs text-slate-300">請學員在手機開啟此網頁並輸入房間號碼：</p>
+                <div id="modalRoomCodeDisplay" class="text-3xl font-black text-amber-400 tracking-widest py-2 bg-slate-950 rounded-xl border border-amber-500/30">
+                    ----
+                </div>
+                <button onclick="copyRoomLink()" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold py-2 px-3 rounded-xl text-xs border border-slate-700 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-copy"></i> 複製連線網址連結
+                </button>
+            </div>
+
+            <button onclick="closeRoomShareModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl text-xs">
+                返回遊戲
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Teacher Lesson Plan Guide -->
+    <div id="guideModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/40 w-full max-w-xl max-h-[85vh] rounded-2xl p-5 overflow-y-auto flex flex-col justify-between shadow-2xl space-y-4">
+            
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-black text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-chalkboard-user"></i> 體驗式教學與活動步驟指引
+                </h3>
+                <button onclick="toggleGuideModal()" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-amber-400 mb-1">🎯 活動目標：</h4>
+                    <p>藉由實體或線上氣球互動，讓學員體驗「徹底斷絕罪惡」的堅決，以及「團契同心托舉持守救恩」的屬靈真理。</p>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="flex gap-2">
+                        <span class="w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">1</span>
+                        <div>
+                            <strong class="text-white">氣球書寫與準備：</strong>
+                            <p class="text-slate-400">第一組學員在氣球寫下罪惡的事情；另一組寫下得救要點。完成後點擊吹飽。</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <span class="w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">2</span>
+                        <div>
+                            <strong class="text-white">踩碎罪惡（限時合作）：</strong>
+                            <p class="text-slate-400">手拉手圍成一圈（線上模式則全場學員齊心連點螢幕），在時間內彼此合作踩破所有罪惡氣球，象徵靠主勝過罪惡。</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <span class="w-5 h-5 bg-amber-500 text-slate-950 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">3</span>
+                        <div>
+                            <strong class="text-white">托舉得救（高飛不落地）：</strong>
+                            <p class="text-slate-400">教員把得救要點氣球拋向空中，學員們想盡辦法向上拍打，在限時內不能有任何氣球落地，象徵同心持守救恩。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-950/40 p-3 rounded-xl border border-amber-500/30">
+                    <h4 class="font-bold text-amber-300 mb-1">💡 GitHub 發布與連線教學：</h4>
+                    <p>教員只需將此 HTML 網頁上傳至 GitHub Pages 發布，即可獲得公開網址。全班用手機開啟該網址並輸入相同 4 位數房號即可跨裝置連線。</p>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button onclick="toggleGuideModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                    明白，返回遊戲
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Firebase Standard SDK Imports & Real-time Room Controller -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Setup Engine
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'balloon-icebreaker-game';
+        
+        // Fallback or injected config
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                // Generic Demo Config
+                apiKey: "AIzaSyDemoKeyForPublicGitHubDeploy123",
+                authDomain: "balloon-game-demo.firebaseapp.com",
+                projectId: "balloon-game-demo",
+                storageBucket: "balloon-game-demo.appspot.com",
+                messagingSenderId: "1234567890",
+                appId: "1:1234567890:web:demo123"
+            };
+
+        let app, db, auth;
+        let currentUser = null;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch(e) {
+            console.warn("Firebase initialized in local/standalone mode:", e);
+        }
+
+        // Global State
+        window.currentRoomId = null;
+        window.isHost = false;
+        window.roomUnsubscribe = null;
+        window.firestoreDB = db;
+        window.firestoreAppId = appId;
+
+        // Async Auth Initialization (Rule 3)
+        async function initAuth() {
+            if (!auth) return;
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = userCredential.user;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    currentUser = userCredential.user;
+                }
+            } catch(e) {
+                console.warn("Auth warning:", e);
+            }
+        }
+
+        window.initAuthPromise = initAuth();
+
+        // Real-time Room Sync Function
+        window.subscribeToRoom = async function(roomId) {
+            await window.initAuthPromise;
+            if (!db || !currentUser) {
+                console.log("Local standalone sync mode");
+                return;
+            }
+
+            if (window.roomUnsubscribe) window.roomUnsubscribe();
+
+            // Strict Rule 1 Path: /artifacts/{appId}/public/data/rooms/{roomId}
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+
+            window.roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.data();
+                window.handleRoomUpdateFromRemote(data);
+            }, (error) => {
+                console.error("Room listener error:", error);
+            });
+        };
+
+        window.updateRemoteRoomState = async function(updateData) {
+            await window.initAuthPromise;
+            if (!db || !currentUser || !window.currentRoomId) return;
+
+            try {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', window.currentRoomId);
+                await updateDoc(roomRef, updateData);
+            } catch(e) {
+                // If doc doesn't exist, set doc
+                try {
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', window.currentRoomId);
+                    await setDoc(roomRef, updateData, { merge: true });
+                } catch(err) {
+                    console.error("Failed to update remote room:", err);
+                }
+            }
+        };
+    </script>
+
+    <script>
+        // Web Audio API Sound Effects
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-red-400';
+        }
+
+        function playPopSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const now = audioCtx.currentTime;
+                const bufferSize = audioCtx.sampleRate * 0.08;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, now);
+                filter.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start(now);
+            } catch(e) {}
+        }
+
+        function playBounceSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.12);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } catch(e) {}
+        }
+
+        function playVictorySound() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const now = audioCtx.currentTime + idx * 0.12;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                });
+            } catch(e) {}
+        }
+
+        // Default Presets
+        const defaultSins = ["謊言", "驕傲", "嫉妒", "貪婪", "憤怒", "自私", "冷漠", "抱怨"];
+        const defaultSalvation = ["耶穌寶血", "悔改認罪", "信靠基督", "神的恩典", "同心禱告", "聖靈感動", "愛人如己", "讀經遵行"];
+
+        // State Data
+        let sinItems = [];
+        let salvationItems = [];
+        let gameStageNum = 1;
+        let timerSeconds = 30;
+        let activeTimer = null;
+        let animationFrameId = null;
+
+        // Multi-player Room Handling
+        function joinExistingRoom() {
+            const code = document.getElementById('joinRoomInput').value.trim();
+            if (!code) {
+                alertCustom("請輸入有效的房間號碼！");
+                return;
+            }
+            enterRoom(code, false);
+        }
+
+        function createNewRoomHost() {
+            const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
+            enterRoom(randomCode, true);
+        }
+
+        function startSinglePlayerMode() {
+            enterRoom("LOCAL", true);
+        }
+
+        function enterRoom(roomId, isHostRole) {
+            window.currentRoomId = roomId;
+            window.isHost = isHostRole;
+
+            document.getElementById('roomBadgeBtn').classList.remove('hidden');
+            document.getElementById('roomBadgeText').innerText = `房號: ${roomId}`;
+
+            document.getElementById('roomJoinPage').classList.add('hidden');
+            document.getElementById('setupPage').classList.remove('hidden');
+
+            if (roomId !== "LOCAL") {
+                window.subscribeToRoom(roomId);
+                // Initialize room state
+                if (isHostRole) {
+                    window.updateRemoteRoomState({
+                        sinItems: sinItems.length ? sinItems : defaultSins,
+                        salvationItems: salvationItems.length ? salvationItems : defaultSalvation,
+                        timerSeconds: timerSeconds,
+                        stage: 0,
+                        lastUpdated: Date.now()
+                    });
+                }
+            } else {
+                loadDefaultPresets();
+            }
+        }
+
+        function handleRoomUpdateFromRemote(data) {
+            if (!data) return;
+
+            if (data.sinItems) {
+                sinItems = data.sinItems;
+            }
+            if (data.salvationItems) {
+                salvationItems = data.salvationItems;
+            }
+            renderLists();
+
+            if (data.timerSeconds) {
+                timerSeconds = data.timerSeconds;
+                document.getElementById('timerSelect').value = timerSeconds.toString();
+            }
+
+            // Sync Stage Progression across devices
+            if (data.stage === 1 && gameStageNum !== 1 && document.getElementById('gameStage').classList.contains('hidden')) {
+                startStage(1, false);
+            } else if (data.stage === 2 && gameStageNum !== 2) {
+                startStage(2, false);
+            } else if (data.stage === 3) {
+                showVictoryScreen();
+            }
+
+            // Sync Popped Sin Balloons
+            if (gameStageNum === 1 && data.poppedSinIndices) {
+                data.poppedSinIndices.forEach(idx => {
+                    if (balloons[idx] && !balloons[idx].popped) {
+                        balloons[idx].popped = true;
+                        createParticles(balloons[idx].x, balloons[idx].y, balloons[idx].color);
+                        playPopSound();
+                    }
+                });
+                balloons = balloons.filter(b => !b.popped);
+                updateCounters();
+            }
+
+            // Sync Salvation Balloon Taps
+            if (gameStageNum === 2 && data.lastSalvationTap) {
+                const tap = data.lastSalvationTap;
+                if (balloons[tap.index]) {
+                    balloons[tap.index].vy = -Math.abs(balloons[tap.index].vy) - 4.5;
+                    createParticles(balloons[tap.index].x, balloons[tap.index].y, '#fef08a');
+                    playBounceSound();
+                }
+            }
+        }
+
+        function loadDefaultPresets() {
+            sinItems = [...defaultSins];
+            salvationItems = [...defaultSalvation];
+            renderLists();
+            syncRoomLists();
+        }
+
+        function addSinBalloon() {
+            const input = document.getElementById('sinInput');
+            const val = input.value.trim();
+            if (val) {
+                sinItems.push(val);
+                input.value = '';
+                renderLists();
+                syncRoomLists();
+            }
+        }
+
+        function addSalvationBalloon() {
+            const input = document.getElementById('salvationInput');
+            const val = input.value.trim();
+            if (val) {
+                salvationItems.push(val);
+                input.value = '';
+                renderLists();
+                syncRoomLists();
+            }
+        }
+
+        function removeSin(index) {
+            sinItems.splice(index, 1);
+            renderLists();
+            syncRoomLists();
+        }
+
+        function removeSalvation(index) {
+            salvationItems.splice(index, 1);
+            renderLists();
+            syncRoomLists();
+        }
+
+        function updateRoomTimerSetting() {
+            timerSeconds = parseInt(document.getElementById('timerSelect').value, 10);
+            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                window.updateRemoteRoomState({ timerSeconds: timerSeconds });
+            }
+        }
+
+        function syncRoomLists() {
+            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                window.updateRemoteRoomState({
+                    sinItems: sinItems,
+                    salvationItems: salvationItems
+                });
+            }
+        }
+
+        function renderLists() {
+            const sinListEl = document.getElementById('sinList');
+            const salvationListEl = document.getElementById('salvationList');
+
+            sinListEl.innerHTML = sinItems.map((item, idx) => `
+                <span class="inline-flex items-center gap-1 bg-red-900/60 text-red-200 text-xs px-2 py-0.5 rounded-full border border-red-500/40 shadow-sm animate-pulse">
+                    <i class="fa-solid fa-balloon text-red-400"></i> ${escapeHtml(item)}
+                    <button onclick="removeSin(${idx})" class="hover:text-white ml-0.5 text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+                </span>
+            `).join('');
+
+            salvationListEl.innerHTML = salvationItems.map((item, idx) => `
+                <span class="inline-flex items-center gap-1 bg-amber-900/60 text-amber-200 text-xs px-2 py-0.5 rounded-full border border-amber-500/40 shadow-sm">
+                    <i class="fa-solid fa-balloon text-amber-400"></i> ${escapeHtml(item)}
+                    <button onclick="removeSalvation(${idx})" class="hover:text-white ml-0.5 text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+                </span>
+            `).join('');
+
+            document.getElementById('sinCountBadge').innerText = `${sinItems.length} 顆`;
+            document.getElementById('salvationCountBadge').innerText = `${salvationItems.length} 顆`;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        // Physics Engine
+        let canvas, ctx;
+        let balloons = [];
+        let particles = [];
+        let canvasWidth = 0;
+        let canvasHeight = 0;
+
+        class Balloon {
+            constructor(text, type, index) {
+                this.text = text;
+                this.type = type;
+                this.index = index;
+                this.radius = Math.min(Math.max(canvasWidth / 9, 36), 56);
+                this.x = Math.random() * (canvasWidth - this.radius * 2) + this.radius;
+                
+                if (type === 'sin') {
+                    this.y = canvasHeight - this.radius - Math.random() * 80;
+                    this.vx = (Math.random() - 0.5) * 1.5;
+                    this.vy = (Math.random() - 0.5) * 0.8;
+                    this.color = '#ef4444';
+                    this.accentColor = '#b91c1c';
+                } else {
+                    this.y = Math.random() * (canvasHeight * 0.3) + this.radius;
+                    this.vx = (Math.random() - 0.5) * 2;
+                    this.vy = Math.random() * 1.2 + 0.8;
+                    this.color = '#f59e0b';
+                    this.accentColor = '#d97706';
+                }
+                
+                this.popped = false;
+                this.wobble = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.wobble += 0.05;
+                this.x += this.vx + Math.sin(this.wobble) * 0.4;
+                this.y += this.vy;
+
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx *= -1;
+                }
+                if (this.x + this.radius > canvasWidth) {
+                    this.x = canvasWidth - this.radius;
+                    this.vx *= -1;
+                }
+
+                if (this.type === 'sin') {
+                    const minY = canvasHeight * 0.45;
+                    const maxY = canvasHeight - this.radius - 10;
+                    if (this.y < minY) { this.y = minY; this.vy *= -1; }
+                    if (this.y > maxY) { this.y = maxY; this.vy *= -1; }
+                } else {
+                    this.vy += 0.03; // gravity
+                    if (this.y - this.radius < 20) {
+                        this.y = 20 + this.radius;
+                        this.vy = Math.abs(this.vy) * 0.5;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.type === 'sin' ? 'rgba(239, 68, 68, 0.6)' : 'rgba(251, 191, 36, 0.7)';
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius * 0.85, this.radius, 0, 0, Math.PI * 2);
+                
+                const grad = ctx.createRadialGradient(-this.radius * 0.3, -this.radius * 0.3, 5, 0, 0, this.radius);
+                if (this.type === 'sin') {
+                    grad.addColorStop(0, '#fca5a5');
+                    grad.addColorStop(0.4, '#ef4444');
+                    grad.addColorStop(1, '#7f1d1d');
+                } else {
+                    grad.addColorStop(0, '#fef08a');
+                    grad.addColorStop(0.4, '#f59e0b');
+                    grad.addColorStop(1, '#78350f');
+                }
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.moveTo(-5, this.radius);
+                ctx.lineTo(5, this.radius);
+                ctx.lineTo(0, this.radius + 8);
+                ctx.closePath();
+                ctx.fillStyle = this.accentColor;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(0, this.radius + 8);
+                ctx.quadraticCurveTo(Math.sin(this.wobble) * 10, this.radius + 25, 0, this.radius + 40);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${Math.max(12, this.radius * 0.32)}px "Noto Sans TC", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#000000';
+                ctx.shadowBlur = 4;
+                ctx.fillText(this.text, 0, 0);
+
+                ctx.restore();
+            }
+
+            containsPoint(px, py) {
+                const dx = px - this.x;
+                const dy = py - this.y;
+                return (dx * dx + dy * dy) <= (this.radius * this.radius * 1.3);
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 4 + 2;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.color = color;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.03;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function inflateAndStartGame() {
+            initAudio();
+            if (sinItems.length === 0) sinItems = [...defaultSins];
+            if (salvationItems.length === 0) salvationItems = [...defaultSalvation];
+
+            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                window.updateRemoteRoomState({ stage: 1 });
+            }
+
+            startStage(1, true);
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            const container = document.getElementById('mainContainer');
+            canvasWidth = container.clientWidth;
+            canvasHeight = container.clientHeight;
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            canvas.removeEventListener('touchstart', handlePointerDown);
+            canvas.removeEventListener('mousedown', handlePointerDown);
+
+            canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+            canvas.addEventListener('mousedown', handlePointerDown);
+        }
+
+        function startStage(stageNum, broadcast = true) {
+            gameStageNum = stageNum;
+            balloons = [];
+            particles = [];
+
+            document.getElementById('setupPage').classList.add('hidden');
+            document.getElementById('resultPage').classList.add('hidden');
+            document.getElementById('gameStage').classList.remove('hidden');
+
+            setupCanvas();
+
+            const stageBadge = document.getElementById('stageBadge');
+            const stageIcon = document.getElementById('stageIcon');
+            const stageTitle = document.getElementById('stageTitle');
+            const stageSub = document.getElementById('stageSub');
+            const counterLabel = document.getElementById('counterLabel');
+            const tipText = document.getElementById('tipText');
+
+            if (stageNum === 1) {
+                stageBadge.className = "bg-slate-900/90 border border-red-500/50 px-2.5 py-1 rounded-xl shadow-lg flex items-center gap-2";
+                stageIcon.className = "w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold";
+                stageIcon.innerText = "1";
+                stageTitle.innerText = "第一關：踩碎罪惡氣球";
+                stageSub.innerText = "點擊把地上所有罪惡氣球全數踩破！";
+                counterLabel.innerText = "剩餘罪惡";
+                tipText.innerText = "全場點擊踩破罪惡氣球，不留任何餘地！";
+
+                sinItems.forEach((item, idx) => {
+                    balloons.push(new Balloon(item, 'sin', idx));
+                });
+
+            } else {
+                stageBadge.className = "bg-slate-900/90 border border-amber-500/50 px-2.5 py-1 rounded-xl shadow-lg flex items-center gap-2";
+                stageIcon.className = "w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-[10px] flex items-center justify-center font-bold";
+                stageIcon.innerText = "2";
+                stageTitle.innerText = "第二關：向上拍打得救氣球";
+                stageSub.innerText = "向上拍打氣球！限時內絕不能讓氣球落地！";
+                counterLabel.innerText = "活躍氣球";
+                tipText.innerText = "向上拍打氣球，萬眾一心，不能讓任何一顆落地！";
+
+                salvationItems.forEach((item, idx) => {
+                    balloons.push(new Balloon(item, 'salvation', idx));
+                });
+            }
+
+            updateCounters();
+            startTimer();
+
+            if (broadcast && window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                window.updateRemoteRoomState({ stage: stageNum });
+            }
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function handlePointerDown(e) {
+            e.preventDefault();
+            initAudio();
+
+            const rect = canvas.getBoundingClientRect();
+            let touches = e.touches ? e.touches : [e];
+
+            for (let i = 0; i < touches.length; i++) {
+                const px = touches[i].clientX - rect.left;
+                const py = touches[i].clientY - rect.top;
+
+                for (let j = balloons.length - 1; j >= 0; j--) {
+                    const b = balloons[j];
+                    if (b.containsPoint(px, py)) {
+                        if (gameStageNum === 1) {
+                            // POP Sin Balloon
+                            createParticles(b.x, b.y, b.color);
+                            playPopSound();
+                            b.popped = true;
+
+                            // Sync Remote
+                            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                                window.updateRemoteRoomState({
+                                    poppedSinIndices: [b.index]
+                                });
+                            }
+
+                            balloons.splice(j, 1);
+                            updateCounters();
+
+                            if (balloons.length === 0) {
+                                clearInterval(activeTimer);
+                                setTimeout(() => {
+                                    alertCustom("罪惡氣球已全數踩碎！準備進入第二關：持守救恩！", () => {
+                                        startStage(2, true);
+                                    });
+                                }, 200);
+                            }
+                        } else {
+                            // Bounce Salvation Balloon Upward
+                            b.vy = -Math.abs(b.vy) - 4.5;
+                            b.vx += (Math.random() - 0.5) * 3;
+                            createParticles(b.x, b.y, '#fef08a');
+                            playBounceSound();
+
+                            // Sync Remote
+                            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                                window.updateRemoteRoomState({
+                                    lastSalvationTap: { index: b.index, time: Date.now() }
+                                });
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 16; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function updateCounters() {
+            document.getElementById('gameCounter').innerText = balloons.length.toString();
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            if (gameStageNum === 2) {
+                const dangerY = canvasHeight - 30;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 8]);
+                ctx.beginPath();
+                ctx.moveTo(0, dangerY);
+                ctx.lineTo(canvasWidth, dangerY);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+                ctx.font = 'bold 11px "Noto Sans TC", sans-serif';
+                ctx.fillText('⚠️ 地面（氣球落地即算失敗）', 15, dangerY + 20);
+                ctx.restore();
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            let salvationFell = false;
+
+            for (let i = balloons.length - 1; i >= 0; i--) {
+                const b = balloons[i];
+                b.update();
+                b.draw();
+
+                if (gameStageNum === 2 && (b.y + b.radius >= canvasHeight - 15)) {
+                    salvationFell = true;
+                }
+            }
+
+            if (salvationFell && gameStageNum === 2) {
+                clearInterval(activeTimer);
+                playPopSound();
+                alertCustom("小心！氣球落地了！大家再接再厲重新拍打！", () => {
+                    startStage(2, true);
+                });
+                return;
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function startTimer() {
+            if (activeTimer) clearInterval(activeTimer);
+            let current = timerSeconds;
+            document.getElementById('gameTimer').innerText = `${current}s`;
+
+            activeTimer = setInterval(() => {
+                current--;
+                document.getElementById('gameTimer').innerText = `${current}s`;
+
+                if (current <= 0) {
+                    clearInterval(activeTimer);
+
+                    if (gameStageNum === 1) {
+                        if (balloons.length > 0) {
+                            alertCustom(`時間到！還剩下 ${balloons.length} 顆罪惡氣球未踩碎！大家繼續加油！`, () => {
+                                startStage(1, true);
+                            });
+                        } else {
+                            startStage(2, true);
+                        }
+                    } else {
+                        playVictorySound();
+                        showVictoryScreen();
+                    }
+                }
+            }, 1000);
+        }
+
+        function showVictoryScreen() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            document.getElementById('gameStage').classList.add('hidden');
+            document.getElementById('resultPage').classList.remove('hidden');
+
+            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                window.updateRemoteRoomState({ stage: 3 });
+            }
+        }
+
+        function resetApp() {
+            if (activeTimer) clearInterval(activeTimer);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            document.getElementById('resultPage').classList.add('hidden');
+            document.getElementById('gameStage').classList.add('hidden');
+            document.getElementById('setupPage').classList.remove('hidden');
+
+            if (window.currentRoomId && window.currentRoomId !== "LOCAL") {
+                window.updateRemoteRoomState({ stage: 0 });
+            }
+        }
+
+        function alertCustom(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in";
+            modal.innerHTML = `
+                <div class="bg-slate-900 border border-amber-500/40 rounded-2xl p-5 max-w-sm w-full text-center space-y-4 shadow-2xl">
+                    <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl border border-amber-500/40">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <p class="text-xs sm:text-sm font-bold text-slate-100 leading-relaxed">${escapeHtml(message)}</p>
+                    <button id="modalConfirmBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-2 rounded-xl text-xs transition">
+                        確定
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('modalConfirmBtn').onclick = () => {
+                document.body.removeChild(modal);
+                if (onConfirm) onConfirm();
+            };
+        }
+
+        function toggleGuideModal() {
+            document.getElementById('guideModal').classList.toggle('hidden');
+        }
+
+        function openRoomShareModal() {
+            document.getElementById('modalRoomCodeDisplay').innerText = window.currentRoomId || "----";
+            document.getElementById('roomShareModal').classList.remove('hidden');
+        }
+
+        function closeRoomShareModal() {
+            document.getElementById('roomShareModal').classList.add('hidden');
+        }
+
+        function copyRoomLink() {
+            const link = window.location.href.split('?')[0] + '?room=' + window.currentRoomId;
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = link;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alertCustom("已複製連結！將連結傳給學員即可快速進入房間。");
+        }
+
+        window.onload = function() {
+            loadDefaultPresets();
+
+            // Check URL for Room Query Parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                document.getElementById('joinRoomInput').value = roomParam;
+                enterRoom(roomParam, false);
+            }
+
+            window.addEventListener('resize', () => {
+                if (canvas && !document.getElementById('gameStage').classList.contains('hidden')) {
+                    setupCanvas();
+                }
+            });
+        };
+    </script>
+</body>
+</html>

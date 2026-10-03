@@ -98,13 +98,13 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-black text-white">加入多人連線房間</h2>
-                    <p class="text-xs text-slate-400 mt-1">請輸入教員公佈的 4 位數房間號碼，或建立新房間</p>
+                    <p class="text-xs text-slate-400 mt-1">請輸入房號（如 7890 或 youth1）加入，或自訂房號主持建立</p>
                 </div>
 
                 <div class="space-y-3 pt-2">
                     <div class="flex gap-2">
-                        <input type="text" id="joinRoomInput" placeholder="輸入 4 位數房號 (如 8888)" maxlength="10"
-                               class="flex-1 bg-slate-950 border border-amber-500/40 rounded-xl px-4 py-3 text-center text-lg font-black text-amber-300 tracking-widest focus:outline-none focus:border-amber-400 uppercase placeholder:text-slate-600 placeholder:text-xs">
+                        <input type="text" id="joinRoomInput" placeholder="輸入房號 (如 7890 或 youth1)" maxlength="20"
+                               class="flex-1 bg-slate-950 border border-amber-500/40 rounded-xl px-4 py-3 text-center text-lg font-black text-amber-300 tracking-wider focus:outline-none focus:border-amber-400 placeholder:text-slate-600 placeholder:text-xs">
                         <button onclick="joinExistingRoom()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black px-5 py-3 rounded-xl text-sm transition shadow-lg shrink-0">
                             加入房間
                         </button>
@@ -112,13 +112,13 @@
 
                     <div class="relative flex py-2 items-center">
                         <div class="flex-grow border-t border-slate-800"></div>
-                        <span class="flex-shrink mx-3 text-slate-500 text-xs font-bold">或</span>
+                        <span class="flex-shrink mx-3 text-slate-500 text-xs font-bold">或主持創房</span>
                         <div class="flex-grow border-t border-slate-800"></div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="createNewRoomHost()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold py-2.5 px-3 rounded-xl text-xs border border-amber-500/30 transition flex items-center justify-center gap-1.5 shadow">
-                            <i class="fa-solid fa-plus-circle"></i> 建立新房間 (主持)
+                        <button onclick="createNewRoomHost()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold py-2.5 px-3 rounded-xl text-xs border border-amber-500/40 transition flex items-center justify-center gap-1.5 shadow">
+                            <i class="fa-solid fa-plus-circle text-amber-400"></i> 以輸入房號主持開房
                         </button>
                         <button onclick="startSinglePlayerMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-3 rounded-xl text-xs border border-slate-700 transition flex items-center justify-center gap-1.5 shadow">
                             <i class="fa-solid fa-desktop"></i> 單機/投影模式
@@ -325,7 +325,7 @@
 
     <!-- Modal: Room Share & QR Code Info -->
     <div id="roomShareModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-amber-500/40 w-full max-w-sm rounded-2xl p-5 text-center space-y-4 shadow-2xl">
+        <div class="bg-slate-900 border border-amber-500/40 w-full max-w-sm rounded-2xl p-5 text-center space-y-3.5 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                 <h3 class="text-sm font-black text-amber-300 flex items-center gap-2">
                     <i class="fa-solid fa-qrcode"></i> 邀請學員加入房間
@@ -335,17 +335,29 @@
                 </button>
             </div>
 
-            <div class="space-y-2">
-                <p class="text-xs text-slate-300">請學員在手機開啟此網頁並輸入房間號碼：</p>
-                <div id="modalRoomCodeDisplay" class="text-3xl font-black text-amber-400 tracking-widest py-2 bg-slate-950 rounded-xl border border-amber-500/30">
+            <div class="space-y-3">
+                <p class="text-xs text-slate-300">請學員掃描 QR Code 或輸入房間號碼：</p>
+                
+                <!-- Display Room Code -->
+                <div id="modalRoomCodeDisplay" class="text-2xl font-black text-amber-400 tracking-widest py-1.5 bg-slate-950 rounded-xl border border-amber-500/30">
                     ----
                 </div>
-                <button onclick="copyRoomLink()" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold py-2 px-3 rounded-xl text-xs border border-slate-700 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-copy"></i> 複製連線網址連結
-                </button>
+
+                <!-- Dynamic QR Code Container -->
+                <div class="p-2 bg-white rounded-xl shadow-inner inline-block mx-auto border-2 border-amber-400/50">
+                    <img id="modalQrCodeImg" src="" alt="Room QR Code" class="w-36 h-36 object-contain mx-auto">
+                </div>
+
+                <!-- Share URL & One-click Copy Button -->
+                <div class="space-y-1.5">
+                    <input type="text" id="modalShareUrlInput" readonly class="w-full bg-slate-950 border border-slate-800 text-[11px] text-slate-400 px-2 py-1.5 rounded-lg text-center select-all focus:outline-none">
+                    <button onclick="copyRoomLink()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
+                        <i class="fa-solid fa-link text-sm"></i> 一鍵複製連線網址連結
+                    </button>
+                </div>
             </div>
 
-            <button onclick="closeRoomShareModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl text-xs">
+            <button onclick="closeRoomShareModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs border border-slate-700">
                 返回遊戲
             </button>
         </div>
@@ -634,8 +646,10 @@
         }
 
         function createNewRoomHost() {
-            const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
-            enterRoom(randomCode, true);
+            const inputCode = document.getElementById('joinRoomInput').value.trim();
+            // If host typed a custom room ID (e.g., 7890, youth1), use it. Otherwise generate a random 4-digit code.
+            const roomCode = inputCode ? inputCode : Math.floor(1000 + Math.random() * 9000).toString();
+            enterRoom(roomCode, true);
         }
 
         function startSinglePlayerMode() {
@@ -1230,7 +1244,17 @@
         }
 
         function openRoomShareModal() {
-            document.getElementById('modalRoomCodeDisplay').innerText = window.currentRoomId || "----";
+            const roomId = window.currentRoomId || "----";
+            document.getElementById('modalRoomCodeDisplay').innerText = `房號: ${roomId}`;
+
+            // Build direct share URL
+            const shareUrl = window.location.href.split('?')[0] + '?room=' + encodeURIComponent(roomId);
+            document.getElementById('modalShareUrlInput').value = shareUrl;
+
+            // Generate dynamic QR Code using public API
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`;
+            document.getElementById('modalQrCodeImg').src = qrApiUrl;
+
             document.getElementById('roomShareModal').classList.remove('hidden');
         }
 
@@ -1239,14 +1263,28 @@
         }
 
         function copyRoomLink() {
-            const link = window.location.href.split('?')[0] + '?room=' + window.currentRoomId;
+            const shareUrl = document.getElementById('modalShareUrlInput').value || (window.location.href.split('?')[0] + '?room=' + window.currentRoomId);
+            
+            // Clipboard Copying with Fallback
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alertCustom("已複製連線網址！學員點開連結即可直接加入房間。");
+                }).catch(() => {
+                    fallbackCopyText(shareUrl);
+                });
+            } else {
+                fallbackCopyText(shareUrl);
+            }
+        }
+
+        function fallbackCopyText(text) {
             const tempInput = document.createElement('input');
             document.body.appendChild(tempInput);
-            tempInput.value = link;
+            tempInput.value = text;
             tempInput.select();
             document.execCommand('copy');
             document.body.removeChild(tempInput);
-            alertCustom("已複製連結！將連結傳給學員即可快速進入房間。");
+            alertCustom("已複製連線網址！學員點開連結即可直接加入房間。");
         }
 
         window.onload = function() {
